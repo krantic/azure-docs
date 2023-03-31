@@ -1,5 +1,5 @@
 ---
-title: Microsoft identity platform and OAuth 2.0 authorization code flow
+title: Microsoft identity platform and OAuth 2.0 authorization code grant
 description: Protocol reference for the Microsoft identity platform's implementation of the OAuth 2.0 authorization code grant 
 author: OwenRichards1
 manager: CelesteDG
@@ -12,15 +12,15 @@ ms.reviewer: ludwignick
 ms.custom: aaddev, identityplatformtop40
 ---
 
-# Microsoft identity platform and OAuth 2.0 authorization code flow
+# Microsoft identity platform and OAuth 2.0 authorization code grant
 
-The OAuth 2.0 authorization code grant type, or _auth code flow_, enables a client application to obtain authorized access to protected resources like web APIs. The auth code flow requires a user-agent that supports redirection from the authorization server (the Microsoft identity platform) back to your application. For example, a web browser, desktop, or mobile application operated by a user to sign in to your app and access their data.
+The OAuth 2.0 authorization code grant type, enables a client application to obtain authorized access to protected resources like web APIs. The auth code grant requires a user-agent that supports redirection from the authorization server (the Microsoft identity platform) back to your application. For example, a web browser, desktop, or mobile application operated by a user to sign in to your app and access their data.
 
 This article describes low-level protocol details usually required only when manually crafting and issuing raw HTTP requests to execute the flow, which we do **not** recommend. Instead, use a [Microsoft-built and supported authentication library](reference-v2-libraries.md) to get security tokens and call protected web APIs in your apps.
 
-## Applications that support the auth code flow
+## Applications that support the auth code grant <!--move to OpenID Connect guide-->
 
-Use the auth code flow paired with Proof Key for Code Exchange (PKCE) and OpenID Connect (OIDC) to get access tokens and ID tokens in these types of apps:
+Use the auth code grant paired with Proof Key for Code Exchange (PKCE) and OpenID Connect (OIDC) to get access tokens and ID tokens in these types of apps:
 
 - [Single-page web application (SPA)](v2-app-types.md#single-page-apps-javascript)
 - [Standard (server-based) web application](v2-app-types.md#web-apps)
@@ -28,24 +28,24 @@ Use the auth code flow paired with Proof Key for Code Exchange (PKCE) and OpenID
 
 ## Protocol details
 
-The OAuth 2.0 authorization code flow is described in [section 4.1 of the OAuth 2.0 specification](https://tools.ietf.org/html/rfc6749). Apps using the OAuth 2.0 authorization code flow acquire an `access_token` to include in requests to resources protected by the Microsoft identity platform (typically APIs). Apps can also request new ID and access tokens for previously authenticated entities by using a refresh mechanism.
+The OAuth 2.0 authorization code grant is described in [section 4.1 of the OAuth 2.0 specification](https://tools.ietf.org/html/rfc6749). Apps using the OAuth 2.0 authorization code grant acquire an `access_token` to include in requests to resources protected by the Microsoft identity platform (typically APIs). Apps can also request new ID and access tokens for previously authenticated entities by using a refresh mechanism.
 
 [!INCLUDE [try-in-postman-link](includes/try-in-postman-link.md)]
 
 This diagram shows a high-level view of the authentication flow:
 
-![Diagram shows OAuth authorization code flow. Native app and Web A P I interact by using tokens as described in this article.](./media/v2-oauth2-auth-code-flow/convergence-scenarios-native.svg)
+![Diagram shows OAuth authorization code grant. Native app and Web A P I interact by using tokens as described in this article.](./media/v2-oauth2-auth-code-flow/convergence-scenarios-native.svg)
 
 ## Redirect URIs for single-page apps (SPAs)
 
-Redirect URIs for SPAs that use the auth code flow require special configuration.
+Redirect URIs for SPAs that use the auth code grant require special configuration.
 
-- **Add a redirect URI** that supports auth code flow with PKCE and cross-origin resource sharing (CORS): Follow the steps in [Redirect URI: MSAL.js 2.0 with auth code flow](scenario-spa-app-registration.md#redirect-uri-msaljs-20-with-auth-code-flow).
+- **Add a redirect URI** that supports auth code grant with PKCE and cross-origin resource sharing (CORS): Follow the steps in [Redirect URI: MSAL.js 2.0 with auth code grant](scenario-spa-app-registration.md#redirect-uri-msaljs-20-with-auth-code-flow).
 - **Update a redirect URI**: Set the redirect URI's `type` to `spa` by using the [application manifest editor](reference-app-manifest.md) in the Azure portal.
 
 The `spa` redirect type is backward-compatible with the implicit flow. Apps currently using the implicit flow to get tokens can move to the `spa` redirect URI type without issues and continue using the implicit flow.
 
-If you attempt to use the authorization code flow without setting up CORS for your redirect URI, you will see this error in the console:
+If you attempt to use the authorization code grant without setting up CORS for your redirect URI, you will see this error in the console:
 
 ```http
 access to XMLHttpRequest at 'https://login.microsoftonline.com/common/v2.0/oauth2/token' from origin 'yourApp.com' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
@@ -57,7 +57,7 @@ Applications can't use a `spa` redirect URI with non-SPA flows, for example, nat
 
 ## Request an authorization code
 
-The authorization code flow begins with the client directing the user to the `/authorize` endpoint. In this request, the client requests the `openid`, `offline_access`, and `https://graph.microsoft.com/mail.read` permissions from the user.
+The authorization code grantbegins with the client directing the user to the `/authorize` endpoint. In this request, the client requests the `openid`, `offline_access`, and `https://graph.microsoft.com/mail.read` permissions from the user.
 
 Some permissions are admin-restricted, for example, writing data to an organization's directory by using `Directory.ReadWrite.All`. If your application requests access to one of these permissions from an organizational user, the user receives an error message that says they're not authorized to consent to your app's permissions. To request access to admin-restricted scopes, you should request them directly from a Global Administrator. For more information, see [Admin-restricted permissions](v2-permissions-and-consent.md#admin-restricted-permissions).
 
@@ -85,7 +85,7 @@ client_id=6731de76-14a6-49ae-97bc-6eba6914391e
 |--------------|-------------|--------------|
 | `tenant`     | required    | The `{tenant}` value in the path of the request can be used to control who can sign into the application. Valid values are `common`, `organizations`, `consumers`, and tenant identifiers. For guest scenarios where you sign a user from one tenant into another tenant, you *must* provide the tenant identifier to sign them into the resource tenant. For more information, see [Endpoints](active-directory-v2-protocols.md#endpoints). |
 | `client_id`  | required    | The **Application (client) ID** that the [Azure portal – App registrations](https://go.microsoft.com/fwlink/?linkid=2083908) experience assigned to your app.  |
-| `response_type` | required    | Must include `code` for the authorization code flow. Can also include `id_token` or `token` if using the [hybrid flow](#request-an-id-token-as-well-or-hybrid-flow). |
+| `response_type` | required    | Must include `code` for the authorization code grant. Can also include `id_token` or `token` if using the [hybrid flow](#request-an-id-token-as-well-or-hybrid-flow). |
 | `redirect_uri` | required | The `redirect_uri` of your app, where authentication responses can be sent and received by your app. It must exactly match one of the redirect URIs you registered in the portal, except it must be URL-encoded. For native and mobile apps, use one of the recommended values: `https://login.microsoftonline.com/common/oauth2/nativeclient` for apps using embedded browsers or `http://localhost` for apps that use system browsers. |
 | `scope`  | required    | A space-separated list of [scopes](v2-permissions-and-consent.md) that you want the user to consent to.  For the `/authorize` leg of the request, this parameter can cover multiple resources. This value allows your app to get consent for multiple web APIs you want to call. |
 | `response_mode`   | recommended | Specifies how the identity platform should return the requested token to your app. <br/><br/>Supported values:<br/><br/>- `query`: Default when requesting an access token. Provides the code as a query string parameter on your redirect URI. The `query` parameter is not supported when requesting an ID token by using the implicit flow. <br/>- `fragment`: Default when requesting an ID token by using the implicit flow. Also supported if requesting *only* a code.<br/>- `form_post`: Executes a POST containing the code to your redirect URI. Supported when requesting a code.<br/><br/> |
@@ -93,8 +93,8 @@ client_id=6731de76-14a6-49ae-97bc-6eba6914391e
 | `prompt`  | optional    | Indicates the type of user interaction that is required. Valid values are `login`, `none`, `consent`, and `select_account`.<br/><br/>- `prompt=login` forces the user to enter their credentials on that request, negating single-sign on.<br/>- `prompt=none` is the opposite. It ensures that the user isn't presented with any interactive prompt. If the request can't be completed silently by using single-sign on, the Microsoft identity platform returns an `interaction_required` error.<br/>- `prompt=consent` triggers the OAuth consent dialog after the user signs in, asking the user to grant permissions to the app.<br/>- `prompt=select_account` interrupts single sign-on providing account selection experience listing all the accounts either in session or any remembered account or an option to choose to use a different account altogether.<br/> |
 | `login_hint` | optional | You can use this parameter to pre-fill the username and email address field of the sign-in page for the user. Apps can use this parameter during reauthentication, after already extracting the `login_hint` [optional claim](active-directory-optional-claims.md) from an earlier sign-in. |
 | `domain_hint`  | optional    | If included, the app skips the email-based discovery process that user goes through on the sign-in page, leading to a slightly more streamlined user experience. For example, sending them to their federated identity provider. Apps can use this parameter during reauthentication, by extracting the `tid` from a previous sign-in.  |
-| `code_challenge`  | recommended / required | Used to secure authorization code grants by using Proof Key for Code Exchange (PKCE). Required if `code_challenge_method` is included. For more information, see the [PKCE RFC](https://tools.ietf.org/html/rfc7636). This parameter is now recommended for all application types, both public and confidential clients, and required by the Microsoft identity platform for [single page apps using the authorization code flow](reference-third-party-cookies-spas.md). |
-| `code_challenge_method` | recommended / required | The method used to encode the `code_verifier` for the `code_challenge` parameter. This *SHOULD* be `S256`, but the spec allows the use of `plain` if the client can't support SHA256. <br/><br/>If excluded, `code_challenge` is assumed to be plaintext if `code_challenge` is included. The Microsoft identity platform supports both `plain` and `S256`. For more information, see the [PKCE RFC](https://tools.ietf.org/html/rfc7636). This parameter is required for [single page apps using the authorization code flow](reference-third-party-cookies-spas.md).|
+| `code_challenge`  | recommended / required | Used to secure authorization code grants by using Proof Key for Code Exchange (PKCE). Required if `code_challenge_method` is included. For more information, see the [PKCE RFC](https://tools.ietf.org/html/rfc7636). This parameter is now recommended for all application types, both public and confidential clients, and required by the Microsoft identity platform for [single page apps using the authorization code grant](reference-third-party-cookies-spas.md). |
+| `code_challenge_method` | recommended / required | The method used to encode the `code_verifier` for the `code_challenge` parameter. This *SHOULD* be `S256`, but the spec allows the use of `plain` if the client can't support SHA256. <br/><br/>If excluded, `code_challenge` is assumed to be plaintext if `code_challenge` is included. The Microsoft identity platform supports both `plain` and `S256`. For more information, see the [PKCE RFC](https://tools.ietf.org/html/rfc7636). This parameter is required for [single page apps using the authorization code grant](reference-third-party-cookies-spas.md).|
 
 At this point, the user is asked to enter their credentials and complete the authentication. The Microsoft identity platform also ensures that the user has consented to the permissions indicated in the `scope` query parameter. If the user hasn't consented to any of those permissions, it asks the user to consent to the required permissions. For more information, see [Permissions and consent in the Microsoft identity platform](v2-permissions-and-consent.md).
 
@@ -148,13 +148,13 @@ The following table describes the various error codes that can be returned in th
 | `login_required` | Too many or no users found. | The client requested silent authentication (`prompt=none`), but a single user couldn't be found. This error may mean there are multiple users active in the session, or no users. This error takes into account the tenant chosen. For example, if there are two Azure AD accounts active and one Microsoft account, and `consumers` is chosen, silent authentication works. |
 | `interaction_required` | The request requires user interaction. | Another authentication step or consent is required. Retry the request without `prompt=none`. |
 
-### Request an ID token as well or hybrid flow
+### Request an ID token as well or hybrid flow  <!--move to OpenID Connect hybrid/implicit flow-->
 
-To learn who the user is before redeeming an authorization code, it's common for applications to also request an ID token when they request the authorization code. This approach is called the *hybrid flow* because it mixes the implicit grant with the authorization code flow.
+To learn who the user is before redeeming an authorization code, it's common for applications to also request an ID token when they request the authorization code. This approach is called the *hybrid flow* because it mixes the implicit grant with the authorization code grant.
 
 The hybrid flow is commonly used in web apps to render a page for a user without blocking on code redemption, notably in [ASP.NET](quickstart-v2-aspnet-core-webapp.md). Both single-page apps and traditional web apps benefit from reduced latency in this model.
 
-The hybrid flow is the same as the authorization code flow described earlier but with three additions. All of these additions are required to request an ID token: new scopes, a new response_type, and a new `nonce` query parameter.
+The hybrid flow is the same as the authorization code grant described earlier but with three additions. All of these additions are required to request an ID token: new scopes, a new response_type, and a new `nonce` query parameter.
 
 ```http
 // Line breaks for legibility only
@@ -227,10 +227,10 @@ client_id=6731de76-14a6-49ae-97bc-6eba6914391e
 |------------|-------------------|----------------|
 | `tenant`   | required   | The `{tenant}` value in the path of the request can be used to control who can sign into the application. Valid values are `common`, `organizations`, `consumers`, and tenant identifiers. For more information, see [Endpoints](active-directory-v2-protocols.md#endpoints).  |
 | `client_id` | required  | The **Application (client) ID** that the [Azure portal – App registrations](https://go.microsoft.com/fwlink/?linkid=2083908) page assigned to your app. |
-| `scope`      | optional   | A space-separated list of scopes. The scopes must all be from a single resource, along with OIDC scopes (`profile`, `openid`, `email`). For more information, see [Permissions and consent in the Microsoft identity platform](v2-permissions-and-consent.md). This parameter is a Microsoft extension to the authorization code flow, intended to allow apps to declare the resource they want the token for during token redemption.|
+| `scope`      | optional   | A space-separated list of scopes. The scopes must all be from a single resource, along with OIDC scopes (`profile`, `openid`, `email`). For more information, see [Permissions and consent in the Microsoft identity platform](v2-permissions-and-consent.md). This parameter is a Microsoft extension to the authorization code grant, intended to allow apps to declare the resource they want the token for during token redemption.|
 | `code`          | required  | The `authorization_code` that you acquired in the first leg of the flow. |
 | `redirect_uri`  | required  | The same `redirect_uri` value that was used to acquire the `authorization_code`. |
-| `grant_type` | required   | Must be `authorization_code` for the authorization code flow.  |
+| `grant_type` | required   | Must be `authorization_code` for the authorization code grant.  |
 | `code_verifier` | recommended  | The same `code_verifier` that was used to obtain the authorization_code. Required if PKCE was used in the authorization code grant request. For more information, see the [PKCE RFC](https://tools.ietf.org/html/rfc7636). |
 | `client_secret` | required for confidential web apps | The application secret that you created in the app registration portal for your app. Don't use the application secret in a native app or single page app because a `client_secret` can't be reliably stored on devices or web pages. It's required for web apps and web APIs, which can store the `client_secret` securely on the server side. Like all parameters here, the client secret must be URL-encoded before being sent. This step is usually done by the SDK. For more information on URI encoding, see the [URI Generic Syntax specification](https://tools.ietf.org/html/rfc3986#page-12). The Basic auth pattern of instead providing credentials in the Authorization header, per [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749#section-2.3.1) is also supported. |
 
@@ -255,10 +255,10 @@ client_id=6731de76-14a6-49ae-97bc-6eba6914391e
 |------------|-------------------|----------------|
 | `tenant`   | required   | The `{tenant}` value in the path of the request can be used to control who can sign into the application. Valid values are `common`, `organizations`, `consumers`, and tenant identifiers. For more detail, see [Endpoints](active-directory-v2-protocols.md#endpoints).  |
 | `client_id` | required  | The **Application (client) ID** that the [Azure portal – App registrations](https://go.microsoft.com/fwlink/?linkid=2083908) page assigned to your app. |
-| `scope`      | optional   | A space-separated list of scopes. The scopes must all be from a single resource, along with OIDC scopes (`profile`, `openid`, `email`). For more information, see [permissions, consent, and scopes](v2-permissions-and-consent.md). This parameter is a Microsoft extension to the authorization code flow. This extension allows apps to declare the resource they want the token for during token redemption.|
+| `scope`      | optional   | A space-separated list of scopes. The scopes must all be from a single resource, along with OIDC scopes (`profile`, `openid`, `email`). For more information, see [permissions, consent, and scopes](v2-permissions-and-consent.md). This parameter is a Microsoft extension to the authorization code grant. This extension allows apps to declare the resource they want the token for during token redemption.|
 | `code`          | required  | The `authorization_code` that you acquired in the first leg of the flow. |
 | `redirect_uri`  | required  | The same `redirect_uri` value that was used to acquire the `authorization_code`. |
-| `grant_type` | required   | Must be `authorization_code` for the authorization code flow.   |
+| `grant_type` | required   | Must be `authorization_code` for the authorization code grant.   |
 | `code_verifier` | recommended  | The same `code_verifier` that was used to obtain the `authorization_code`. Required if PKCE was used in the authorization code grant request. For more information, see the [PKCE RFC](https://tools.ietf.org/html/rfc7636). |
 | `client_assertion_type` | required for confidential web apps | The value must be set to `urn:ietf:params:oauth:client-assertion-type:jwt-bearer` to use a certificate credential. |
 | `client_assertion` | required for confidential web apps  | An assertion, which is a JSON web token (JWT), that you need to create and sign with the certificate you registered as credentials for your application. Read about [certificate credentials](active-directory-certificate-credentials.md) to learn how to register your certificate and the format of the assertion.|
@@ -352,7 +352,7 @@ Refresh tokens for web apps and native apps don't have specified lifetimes. Typi
 Refresh tokens aren't revoked when used to acquire new access tokens. You're expected to discard the old refresh token. The [OAuth 2.0 spec](https://tools.ietf.org/html/rfc6749#section-6) says: "The authorization server MAY issue a new refresh token, in which case the client MUST discard the old refresh token and replace it with the new refresh token. The authorization server MAY revoke the old refresh token after issuing a new refresh token to the client."
 
 >[!IMPORTANT]
-> For refresh tokens sent to a redirect URI registered as `spa`, the refresh token expires after 24 hours. Additional refresh tokens acquired using the initial refresh token carries over that expiration time, so apps must be prepared to re-run the authorization code flow using an interactive authentication to get a new refresh token every 24 hours. Users do not have to enter their credentials, and usually don't even see any user experience, just a reload of your application. The browser must visit the login page in a top level frame in order to see the login session. This is due to [privacy features in browsers that block third party cookies](reference-third-party-cookies-spas.md).
+> For refresh tokens sent to a redirect URI registered as `spa`, the refresh token expires after 24 hours. Additional refresh tokens acquired using the initial refresh token carries over that expiration time, so apps must be prepared to re-run the authorization code grant using an interactive authentication to get a new refresh token every 24 hours. Users do not have to enter their credentials, and usually don't even see any user experience, just a reload of your application. The browser must visit the login page in a top level frame in order to see the login session. This is due to [privacy features in browsers that block third party cookies](reference-third-party-cookies-spas.md).
 
 ```http
 // Line breaks for legibility only
@@ -372,7 +372,7 @@ client_id=535fb089-9ff3-47b6-9bfb-4f1264799865
 |---------------|----------------|--------------------|
 | `tenant`        | required     | The `{tenant}` value in the path of the request can be used to control who can sign into the application. Valid values are `common`, `organizations`, `consumers`, and tenant identifiers. For more information, see [Endpoints](active-directory-v2-protocols.md#endpoints).   |
 | `client_id`     | required    | The **Application (client) ID** that the [Azure portal – App registrations](https://go.microsoft.com/fwlink/?linkid=2083908) experience assigned to your app. |
-| `grant_type`    | required    | Must be `refresh_token` for this leg of the authorization code flow. |
+| `grant_type`    | required    | Must be `refresh_token` for this leg of the authorization code grant. |
 | `scope`         | optional    | A space-separated list of scopes. The scopes requested in this leg must be equivalent to or a subset of the scopes requested in the original `authorization_code` request leg. If the scopes specified in this request span multiple resource server, then the Microsoft identity platform returns a token for the resource specified in the first scope. For more information, see [Permissions and consent in the Microsoft identity platform](v2-permissions-and-consent.md). |
 | `refresh_token` | required    | The `refresh_token` that you acquired in the second leg of the flow. |
 | `client_secret` | required for web apps | The application secret that you created in the app registration portal for your app. It shouldn't be used in a native app, because a `client_secret` can't be reliably stored on devices. It's required for web apps and web APIs, which can store the `client_secret` securely on the server side. This secret needs to be URL-Encoded. For more information, see the [URI Generic Syntax specification](https://tools.ietf.org/html/rfc3986#page-12). |
